@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#171614;--surface:#1c1b19;--surface2:#201f1d;--surface3:#252422;
+  --border:#393836;--divider:#2e2c2a;
+  --text:#cdccca;--muted:#797876;--faint:#4a4948;
+  --primary:#4f98a3;--primary-dark:#227f8b;--primary-glow:rgba(79,152,163,.15);
+  --green:#6daa45;--green-bg:#2a3a24;
+  --red:#d163a7;--red-bg:#3d2638;
+  --yellow:#e8af34;--yellow-bg:#3d3420;
+  --orange:#bb653b;--orange-bg:#3d2e24;
+  --r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);--t:160ms cubic-bezier(.16,1,.3,1);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#f5f4f0;--surface:#fafaf7;--surface2:#f2f1ee;--surface3:#eceae6;
+  --border:#d8d6d0;--divider:#e4e2dd;
+  --text:#1e1c18;--muted:#6b6966;--faint:#b0aead;
+  --primary:#01696f;--primary-dark:#004f54;--primary-glow:rgba(1,105,111,.12);
+  --green:#3d7020;--green-bg:#daeacc;--red:#9e2875;--red-bg:#f0daea;
+  --yellow:#b88800;--yellow-bg:#f5e8b8;--orange:#883a18;--orange-bg:#f0d8c8;
+  --shadow:0 4px 24px rgba(0,0,0,.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;font-family:var(--font);color:var(--text);background:var(--bg);transition:background var(--t),color var(--t)}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:var(--r-sm)}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:38px;height:38px;background:var(--primary);border-radius:var(--r-lg);display:grid;place-items:center;flex-shrink:0}
+.logo-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+.logo-title{font-size:1.2rem;font-weight:700;letter-spacing:-.02em}
+.logo-sub{font-size:.75rem;color:var(--muted);margin-top:-1px}
+.theme-btn{width:36px;height:36px;border-radius:var(--r-md);border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);transition:all var(--t)}
+.theme-btn:hover{background:var(--surface2);color:var(--text)}
+.theme-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.steps{display:flex;gap:6px;margin-bottom:28px}
+.step-bar{flex:1;height:3px;border-radius:var(--r-full);background:var(--divider);transition:background .4s}
+.step-bar.active{background:var(--primary)}.step-bar.done{background:var(--green)}
+.screen{display:none}.screen.active{display:block}
+.fade{animation:fadeUp .28s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:16px}
+.card-desc{font-size:.875rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.mod-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden;transition:border-color var(--t)}
+.mod-card:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+.mod-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--divider)}
+.mod-num{width:22px;height:22px;border-radius:var(--r-full);background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.mod-name{flex:1;background:transparent;border:none;font-size:.95rem;font-weight:500;outline:none;color:var(--text)}
+.mod-name::placeholder{color:var(--faint)}
+.del-btn{width:26px;height:26px;border-radius:var(--r-full);display:grid;place-items:center;color:var(--faint);transition:all var(--t)}
+.del-btn:hover{background:var(--red-bg);color:var(--red)}
+.del-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5}
+.comps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px 8px}
+.comp-field{display:flex;flex-direction:column;gap:5px}
+.comp-lbl{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:var(--r-full);flex-shrink:0}
+.dot.ds{background:var(--primary)}.dot.tp{background:var(--yellow)}.dot.exam{background:var(--orange)}.dot.oral{background:var(--red)}
+.pct-inp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:7px 10px;font-family:var(--mono);font-size:.85rem;text-align:center;outline:none;transition:border-color var(--t),box-shadow var(--t);width:100%}
+.pct-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+.mod-foot{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 14px;gap:12px}
+.coeff-wrap{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)}
+.coeff-inp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:5px 10px;font-family:var(--mono);font-size:.85rem;width:60px;text-align:center;outline:none;transition:border-color var(--t)}
+.coeff-inp:focus{border-color:var(--primary)}
+.wt-total{font-size:.75rem;font-family:var(--mono);color:var(--muted);text-align:right}
+.wt-total.ok{color:var(--green)}.wt-total.bad{color:var(--red)}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:var(--r-lg);border:1.5px dashed var(--border);color:var(--muted);font-size:.875rem;font-weight:500;transition:all var(--t);margin-top:4px}
+.add-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
+.add-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--r-lg);font-size:.875rem;font-weight:600;border:1px solid transparent;transition:all var(--t)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-ghost{background:var(--surface2);border-color:var(--border);color:var(--muted)}.btn-ghost:hover{color:var(--text);background:var(--surface3)}
+.err{background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r-md);padding:10px 14px;font-size:.85rem;color:var(--red);margin-bottom:12px;display:none}
+.err.show{display:block}
+.grade-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);margin-bottom:14px;overflow:hidden}
+.grade-head{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--divider)}
+.grade-badge{background:var(--primary);color:#fff;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:var(--r-full);text-transform:uppercase}
+.grade-title{font-weight:600;font-size:.95rem}
+.grade-fields{display:grid;gap:14px;padding:18px 20px}
+.gf{display:grid;grid-template-columns:180px 1fr;align-items:center;gap:16px}
+.gf-label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;font-weight:500}
+.pct-tag{font-size:.7rem;font-family:var(--mono);color:var(--faint);background:var(--surface3);border-radius:var(--r-sm);padding:1px 6px}
+.g-wrap{position:relative}
+.g-pfx{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--faint);font-family:var(--mono);pointer-events:none}
+.g-inp{width:100%;padding:9px 12px 9px 34px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);font-size:.95rem;font-family:var(--mono);outline:none;transition:border-color var(--t),box-shadow var(--t)}
+.g-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+.g-hint{font-size:.7rem;color:var(--faint);margin-top:4px}
+.coeff-grade-row{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--divider);background:var(--surface3)}
+.coeff-grade-lbl{font-size:.8rem;color:var(--muted)}
+.coeff-grade-inp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:6px 10px;font-family:var(--mono);font-size:.85rem;width:80px;text-align:center;outline:none;transition:border-color var(--t)}
+.coeff-grade-inp:focus{border-color:var(--primary)}
+.hero{text-align:center;padding:40px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);margin-bottom:20px}
+.hero-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+.hero-score{font-size:clamp(3.5rem,10vw,5.5rem);font-weight:800;font-family:var(--mono);letter-spacing:-.04em;line-height:1}
+.hero-score.s-ex{color:var(--green)}.hero-score.s-g{color:var(--primary)}.hero-score.s-av{color:var(--yellow)}.hero-score.s-po{color:var(--orange)}.hero-score.s-f{color:var(--red)}
+.hero-denom{font-size:.9rem;color:var(--muted);margin-top:4px}
+.hero-mention{font-size:1.3rem;font-weight:700;margin:12px 0 4px}
+.hero-status{font-size:.9rem;color:var(--muted)}
+.mod-res{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:10px}
+.mod-res-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:14px 18px}
+.mod-res-name{font-weight:600}
+.mod-res-score{font-family:var(--mono);font-weight:700;font-size:1.1rem}
+.mod-res-coeff{font-size:.72rem;font-family:var(--mono);color:var(--faint)}
+.bar-wrap{padding:0 18px 12px}
+.bar-bg{height:5px;background:var(--divider);border-radius:var(--r-full);overflow:hidden}
+.bar-fill{height:100%;border-radius:var(--r-full);transition:width .9s cubic-bezier(.16,1,.3,1)}
+.bdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;padding:0 18px 14px}
+.bd-item{background:var(--surface2);border:1px solid var(--divider);border-radius:var(--r-md);padding:8px 10px}
+.bd-type{font-size:.68rem;color:var(--muted);margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.bd-val{font-size:.85rem;font-family:var(--mono);font-weight:600}
+@media(max-width:580px){.comps{grid-template-columns:repeat(2,1fr)}.gf{grid-template-columns:1fr}.mod-res-coeff{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <div><div class="logo-title">GradeCalc</div><div class="logo-sub">Semester Result Calculator &nbsp;·&nbsp; Realized by <strong>Mandhour Rayen</strong></div></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme"></button>
+  </header>
+  <div class="steps">
+    <div class="step-bar active" id="s1"></div>
+    <div class="step-bar" id="s2"></div>
+    <div class="step-bar" id="s3"></div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="screen active fade" id="sc-setup">
+    <div class="card">
+      <div class="card-label">Step 1 — Your Modules & Weights</div>
+      <div class="card-desc">All modules and weights are pre-filled. You can edit names, adjust weights, add or remove modules, and set coefficients.</div>
+      <div id="mods-grid"></div>
+      <button class="add-btn" id="addModBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add Module</button>
+    </div>
+    <div class="err" id="setup-err"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="toGrades">Next: Enter Grades <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- GRADES -->
+  <div class="screen fade" id="sc-grades">
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-label">Step 2 — Enter Your Grades</div>
+      <div class="card-desc">Enter each grade out of 20. Blank = 0. Adjust coefficients if needed.</div>
+    </div>
+    <div id="grades-con"></div>
+    <div class="err" id="grades-err"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="backSetup"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</button>
+      <button class="btn btn-primary" id="calcBtn">Calculate <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen fade" id="sc-results">
+    <div id="hero-con"></div>
+    <div class="card">
+      <div class="card-label">Module Breakdown</div>
+      <div id="mods-res"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="backGrades"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Edit Grades</button>
+      <button class="btn btn-primary" id="restart"><svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Start Over</button>
+    </div>
+  </div>
+</div>
+<script>
+const COMPS=[{k:'ds',lbl:'DS',dot:'ds'},{k:'tp',lbl:'TP',dot:'tp'},{k:'exam',lbl:'Exam',dot:'exam'},{k:'oral',lbl:'Oral',dot:'oral'}];
+
+// ── Theme ──
+const html=document.documentElement;
+const themeBtn=document.getElementById('themeBtn');
+let dark=true;
+const SUN=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const MOON=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+themeBtn.innerHTML=SUN;
+themeBtn.addEventListener('click',()=>{dark=!dark;html.setAttribute('data-theme',dark?'dark':'light');themeBtn.innerHTML=dark?SUN:MOON;});
+
+// ── State: pre-filled with your modules ──
+let mid=10;
+let mods=[
+  {id:1,  name:"Automatique",                                           w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:2,  name:"Traitement du signal Analogique",                       w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:3,  name:"Architecture des Microprocesseurs et Microcontr\u00f4leurs", w:{ds:'10',tp:'0',exam:'80',oral:'10'}, coeff:1, grades:{}},
+  {id:4,  name:"Programmation en assembleur (Microprocesseurs)",        w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:5,  name:"CAO et PCB Design",                                     w:{ds:'0', tp:'0', exam:'0', oral:'100'},coeff:1, grades:{}},
+  {id:6,  name:"Instrumentation et M\u00e9trologie",                       w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:7,  name:"Transmission des donn\u00e9es",                            w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:8,  name:"Fonctions d'\u00c9lectronique Analogique",                w:{ds:'20',tp:'20',exam:'60',oral:'0'},  coeff:1, grades:{}},
+  {id:9,  name:"Anglais Scientifique 1",                                w:{ds:'50',tp:'0', exam:'0', oral:'50'}, coeff:1, grades:{}},
+  {id:10, name:"Technique de communication professionnelle",            w:{ds:'50',tp:'0', exam:'0', oral:'50'}, coeff:1, grades:{}}
+];
+
+// ── Screen ──
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active','fade');});
+  const el=document.getElementById(id);el.classList.add('active');void el.offsetWidth;el.classList.add('fade');
+  const map={'sc-setup':0,'sc-grades':1,'sc-results':2};
+  ['s1','s2','s3'].forEach((sid,i)=>{const e=document.getElementById(sid);e.className='step-bar'+(i<map[id]?' done':i===map[id]?' active':'');});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Render modules ──
+function addMod(){mid++;mods.push({id:mid,name:'',w:{ds:'',tp:'',exam:'',oral:''},coeff:1,grades:{}});renderMods();}
+function delMod(id){mods=mods.filter(m=>m.id!==id);renderMods();}
+
+function renderMods(){
+  const g=document.getElementById('mods-grid');g.innerHTML='';
+  mods.forEach((m,i)=>{
+    const d=document.createElement('div');d.className='mod-card';
+    d.innerHTML=`<div class="mod-head">
+      <div class="mod-num">${i+1}</div>
+      <input class="mod-name" type="text" placeholder="Module name…" value="${m.name.replace(/"/g,'&quot;')}" data-id="${m.id}" maxlength="60">
+      <button class="del-btn" data-del="${m.id}" title="Remove"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="comps">
+      ${COMPS.map(c=>`<div class="comp-field">
+        <div class="comp-lbl"><span class="dot ${c.dot}"></span>${c.lbl} %</div>
+        <input class="pct-inp" type="number" min="0" max="100" step="1" placeholder="0" value="${m.w[c.k]}" data-id="${m.id}" data-w="${c.k}">
+      </div>`).join('')}
+    </div>
+    <div class="mod-foot">
+      <div class="coeff-wrap">Coefficient <input class="coeff-inp" type="number" min="1" max="10" step="0.5" value="${m.coeff||1}" data-id="${m.id}" data-coeff></div>
+      <div class="wt-total" id="wt-${m.id}"></div>
+    </div>`;
+    g.appendChild(d);updateWT(m.id);
+  });
+  g.querySelectorAll('.mod-name').forEach(inp=>inp.addEventListener('input',e=>{const m=mods.find(x=>x.id==e.target.dataset.id);if(m)m.name=e.target.value;}));
+  g.querySelectorAll('[data-w]').forEach(inp=>inp.addEventListener('input',e=>{const m=mods.find(x=>x.id==e.target.dataset.id);if(m){m.w[e.target.dataset.w]=e.target.value;updateWT(m.id);}}));
+  g.querySelectorAll('[data-coeff]').forEach(inp=>inp.addEventListener('input',e=>{const m=mods.find(x=>x.id==e.target.dataset.id);if(m)m.coeff=parseFloat(e.target.value)||1;}));
+  g.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',e=>delMod(+e.currentTarget.dataset.del)));
+}
+
+function updateWT(id){
+  const m=mods.find(x=>x.id===id);if(!m)return;
+  const t=COMPS.reduce((a,c)=>a+(parseFloat(m.w[c.k])||0),0);
+  const el=document.getElementById('wt-'+id);if(!el)return;
+  el.textContent='Total: '+t+'%';el.className='wt-total'+(t===100?' ok':t>100?' bad':'');
+}
+
+// ── Validation ──
+function err(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),5000);}
+function noErr(id){document.getElementById(id).classList.remove('show');}
+function validateSetup(){
+  if(!mods.length){err('setup-err','Add at least one module.');return false;}
+  for(const m of mods){
+    if(!m.name.trim()){err('setup-err','Every module needs a name.');return false;}
+    const t=COMPS.reduce((a,c)=>a+(parseFloat(m.w[c.k])||0),0);
+    if(Math.round(t)!==100){err('setup-err',`"${m.name}": weights must sum to 100% (currently ${t}%).`);return false;}
+  }
+  return true;
+}
+
+// ── Grades screen ──
+function buildGrades(){
+  const con=document.getElementById('grades-con');con.innerHTML='';
+  mods.forEach(m=>{
+    const ac=COMPS.filter(c=>parseFloat(m.w[c.k])>0);
+    const card=document.createElement('div');card.className='grade-card';
+    card.innerHTML=`<div class="grade-head"><span class="grade-badge">Module</span><span class="grade-title">${m.name}</span></div>
+    <div class="grade-fields">${ac.map(c=>`<div class="gf">
+      <div class="gf-label"><span class="dot ${c.dot}"></span>${c.lbl}<span class="pct-tag">${m.w[c.k]}%</span></div>
+      <div><div class="g-wrap"><span class="g-pfx">/20</span>
+        <input class="g-inp" type="number" min="0" max="20" step="0.25" placeholder="—" data-gmod="${m.id}" data-gcomp="${c.k}" value="${m.grades[c.k]!==undefined?m.grades[c.k]:''}">
+      </div><div class="g-hint">0 – 20</div></div>
+    </div>`).join('')}</div>
+    <div class="coeff-grade-row"><span class="coeff-grade-lbl">Coefficient</span>
+      <input class="coeff-grade-inp" type="number" min="1" max="10" step="0.5" value="${m.coeff||1}" data-cmod="${m.id}">
+    </div>`;
+    con.appendChild(card);
+  });
+  con.querySelectorAll('.g-inp').forEach(inp=>inp.addEventListener('input',e=>{const m=mods.find(x=>x.id==e.target.dataset.gmod);if(m)m.grades[e.target.dataset.gcomp]=e.target.value;}));
+  con.querySelectorAll('[data-cmod]').forEach(inp=>inp.addEventListener('input',e=>{const m=mods.find(x=>x.id==e.target.dataset.cmod);if(m)m.coeff=parseFloat(e.target.value)||1;}));
+}
+function validateGrades(){
+  for(const m of mods){
+    for(const c of COMPS.filter(c=>parseFloat(m.w[c.k])>0)){
+      const v=m.grades[c.k];if(v===''||v===undefined)continue;
+      const n=parseFloat(v);if(isNaN(n)||n<0||n>20){err('grades-err',`"${m.name}" – ${c.lbl}: must be 0–20.`);return false;}
+    }
+  }
+  return true;
+}
+
+// ── Calculate ──
+function mention(s){
+  if(s>=18)return{t:'Très Bien ✨',cls:'s-ex'};if(s>=16)return{t:'Bien 🎯',cls:'s-g'};
+  if(s>=14)return{t:'Assez Bien 👍',cls:'s-g'};if(s>=10)return{t:'Passable',cls:'s-av'};
+  if(s>=8)return{t:'Insuffisant',cls:'s-po'};return{t:'Ajourné ❌',cls:'s-f'};
+}
+function barColor(s){return s>=16?'var(--green)':s>=12?'var(--primary)':s>=10?'var(--yellow)':s>=8?'var(--orange)':'var(--red)';}
+
+function calc(){
+  const res=mods.map(m=>{
+    const ac=COMPS.filter(c=>parseFloat(m.w[c.k])>0);
+    let score=0;const bd={};
+    ac.forEach(c=>{
+      const w=parseFloat(m.w[c.k])/100;
+      const g=(m.grades[c.k]!==undefined&&m.grades[c.k]!=='')?parseFloat(m.grades[c.k])||0:0;
+      bd[c.k]={w:parseFloat(m.w[c.k]),g:m.grades[c.k]};score+=g*w;
+    });
+    return{m,score:Math.round(score*100)/100,bd};
+  });
+  const tc=res.reduce((a,r)=>a+(r.m.coeff||1),0);
+  const avg=Math.round(res.reduce((a,r)=>a+r.score*(r.m.coeff||1),0)/tc*100)/100;
+  const men=mention(avg);
+  document.getElementById('hero-con').innerHTML=`<div class="hero">
+    <div class="hero-lbl">Semester Average</div>
+    <div class="hero-score ${men.cls}">${avg.toFixed(2)}</div>
+    <div class="hero-denom">out of 20</div>
+    <div class="hero-mention">${men.t}</div>
+    <div class="hero-status">${avg>=10?'✅ Admitted':'❌ Failed'}</div>
+  </div>`;
+  const con=document.getElementById('mods-res');con.innerHTML='';
+  res.forEach(r=>{
+    const bc=barColor(r.score);const bw=(r.score/20*100).toFixed(1);
+    const ac=COMPS.filter(c=>r.bd[c.k]);
+    const d=document.createElement('div');d.className='mod-res';
+    d.innerHTML=`<div class="mod-res-head">
+      <div class="mod-res-name">${r.m.name}</div>
+      <div class="mod-res-score" style="color:${bc}">${r.score.toFixed(2)}/20</div>
+      <div class="mod-res-coeff">coeff ×${r.m.coeff||1}</div>
+    </div>
+    <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:${bc}" data-w="${bw}%"></div></div></div>
+    <div class="bdown">${ac.map(c=>{const b=r.bd[c.k];const gv=b.g!==''&&b.g!==undefined?parseFloat(b.g):null;
+      return`<div class="bd-item"><div class="bd-type"><span class="dot ${c.dot}"></span>${c.lbl} (${b.w}%)</div><div class="bd-val">${gv!==null?gv.toFixed(2):'—'}/20</div></div>`;
+    }).join('')}</div>`;
+    con.appendChild(d);
+  });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{document.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w);}));
+}
+
+// ── Buttons ──
+document.getElementById('addModBtn').addEventListener('click',addMod);
+document.getElementById('toGrades').addEventListener('click',()=>{if(!validateSetup())return;noErr('setup-err');buildGrades();show('sc-grades');});
+document.getElementById('backSetup').addEventListener('click',()=>show('sc-setup'));
+document.getElementById('calcBtn').addEventListener('click',()=>{if(!validateGrades())return;noErr('grades-err');calc();show('sc-results');});
+document.getElementById('backGrades').addEventListener('click',()=>{buildGrades();show('sc-grades');});
+document.getElementById('restart').addEventListener('click',()=>{mods=[];mid=0;renderMods();show('sc-setup');});
+
+// ── Init ──
+renderMods();
+</script>
+</body>
+</html>
